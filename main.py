@@ -3,7 +3,7 @@ import scanpy as sc
 import episcanpy as epi
 
 if __name__ == "__main__":
-    dataset = 'CITE'  # select sample data type
+    dataset = 'SNARE'  # select sample data type
 
     if dataset == 'SNARE':
         train_rna_data_path = 'data/SNARE/RNA.h5ad'

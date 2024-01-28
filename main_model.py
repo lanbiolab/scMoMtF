@@ -32,6 +32,7 @@ def model_name_RC(annData_1, annData_2, dataset):
     nfeatures_2 = adata2.X.shape[1]
     train_data = np.concatenate((adata1.X, adata2.X), axis=1)
     k_fold = StratifiedKFold(n_splits=5, shuffle=True, random_state=args.seed)
+    times = 1
     temp_1 = []
     temp_2 = []
     # five-fold cross-validation
@@ -47,7 +48,7 @@ def model_name_RC(annData_1, annData_2, dataset):
                              drop_last=False)
 
         print("The dataset is", args.dataset)
-        model_save_path = "trained_model/{}/".format(args.dataset)
+        model_save_path = "trained_model/{}/{}/".format(args.dataset, times)
         transform_real_label = real_label(index, classify_dim)
         # define model
         model = scMoMtF(args=args, nfeatures_modality1=nfeatures_1, nfeatures_modality2=nfeatures_2,
@@ -61,15 +62,17 @@ def model_name_RC(annData_1, annData_2, dataset):
                             classify_dim=classify_dim, save_path=model_save_path)
         # task testing
         if args.classification:
-            accuracy = classification(args, model, test_dl, transform_real_label)
+            accuracy = classification(args, model, test_dl, transform_real_label, times)
 
         if args.dim_reduce:
-            metrics = dim_reduce(args, model, test_dl, transform_real_label)
+            metrics = dim_reduce(args, model, test_dl, transform_real_label, times)
 
         if args.simulation:
-            simulation(args, model, test_dl, nfeatures_1, nfeatures_2)
+            simulation(args, model, test_dl, nfeatures_1, nfeatures_2, times)
         temp_1.append(accuracy)
         temp_2.append(metrics)
+        times = times + 1
     average_accuracy = np.mean(temp_1)
     average_metrics = np.mean(np.array(temp_2), axis=0)
+    print("average metrics:")
     print(average_accuracy, average_metrics)

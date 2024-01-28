@@ -10,16 +10,16 @@ import scanpy as sc
 import torch
 
 
-def classification(args, model, dl, real_label):
+def classification(args, model, dl, real_label, times):
     # set random to reproduce the result
     setup_seed(args.seed)
     if args.query:
         path = "query"
     else:
         path = "reference"
-    if not os.path.exists('output/classification/{}/{}'.format(args.dataset, path)):
-        os.makedirs('output/classification/{}/{}'.format(args.dataset, path))
-    save_path = open('output/classification/{}/{}/accuracy_each_cell.txt'.format(args.dataset, path), "w")
+    if not os.path.exists('output/classification/{}/{}/{}/'.format(args.dataset, path, times)):
+        os.makedirs('output/classification/{}/{}/{}/'.format(args.dataset, path, times))
+    save_path = open('output/classification/{}/{}/{}/accuracy_each_cell.txt'.format(args.dataset, path, times), "w")
     classified_label, groundtruth_label, prob = classification_module(model, dl, real_label)
     t = 0
     for j in range(len(groundtruth_label)):
@@ -30,19 +30,19 @@ def classification(args, model, dl, real_label):
 
     accuracy = t / len(groundtruth_label)
     print(accuracy)
-    print("finish classification")
+    print("finish classification", times)
     return accuracy
 
 
-def dim_reduce(args, model, dl, real_label):
+def dim_reduce(args, model, dl, real_label, times):
     if args.query:
         path = "query"
     else:
         path = "reference"
     encoding_data, ori_data, label = get_encodings(model, dl)
     # eliminate outliers
-    if not os.path.exists('output/dim_reduce/{}/{}/'.format(args.dataset, path)):
-        os.makedirs('output/dim_reduce/{}/{}/'.format(args.dataset, path))
+    if not os.path.exists('output/dim_reduce/{}/{}/{}/'.format(args.dataset, path, times)):
+        os.makedirs('output/dim_reduce/{}/{}/{}/'.format(args.dataset, path, times))
 
     b_list = range(0, encoding_data.size(1))
     feature_index = ['feature_{}'.format(b) for b in b_list]
@@ -70,14 +70,14 @@ def dim_reduce(args, model, dl, real_label):
     print('Final: AMI= %.4f, NMI= %.4f, ARI= %.4f' % (ami, nmi, ari))
 
     pd.DataFrame(encoding_data.cpu().numpy(), index=cell_name_real, columns=feature_index).to_csv(
-        'output/dim_reduce/{}/{}/latent_space.csv'.format(args.dataset, path))
+        'output/dim_reduce/{}/{}/{}/latent_space.csv'.format(args.dataset, path, times))
     pd.DataFrame(real_label_new, index=cell_name_real, columns=["label"]).to_csv(
-        'output/dim_reduce/{}/{}/latent_space_label.csv'.format(args.dataset, path))
+        'output/dim_reduce/{}/{}/{}/latent_space_label.csv'.format(args.dataset, path, times))
     print("finish dimension reduction")
     return [ami, nmi, ari]
 
 
-def simulation(args, model, dl, nfeatures_1, nfeatures_2):
+def simulation(args, model, dl, nfeatures_1, nfeatures_2, times):
     if args.query:
         path = "query"
     else:
@@ -91,10 +91,10 @@ def simulation(args, model, dl, nfeatures_1, nfeatures_2):
     sim_modality2_data = sim_data[:, nfeatures_1:nfeatures_1+nfeatures_2]
     b_list = range(0, sim_data.size(0))
     cell_name_real = ['cell_{}'.format(b) for b in b_list]
-    if not os.path.exists('output/simulation/{}/{}/'.format(args.dataset, path)):
-        os.makedirs('output/simulation/{}/{}/'.format(args.dataset, path))
+    if not os.path.exists('output/simulation/{}/{}/{}/'.format(args.dataset, path, times)):
+        os.makedirs('output/simulation/{}/{}/{}/'.format(args.dataset, path, times))
     pd.DataFrame(sim_modality1_data.cpu().numpy(), index=cell_name_real).to_csv(
-        'output/simulation/{}/{}/sim_modality1_data.csv'.format(args.dataset, path))
+        'output/simulation/{}/{}/{}/sim_modality1_data.csv'.format(args.dataset, path, times))
     pd.DataFrame(sim_modality2_data.cpu().numpy(), index=cell_name_real).to_csv(
-        'output/simulation/{}/{}/sim_modality2_data.csv'.format(args.dataset, path))
+        'output/simulation/{}/{}/{}/sim_modality2_data.csv'.format(args.dataset, path, times))
     print("finish simulation")
